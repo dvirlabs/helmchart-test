@@ -1,0 +1,103 @@
+Helm chart
+===========
+
+====================================================================================================================================================================================================================================================
+What is "Helm chart": Helm chart is a collection of files that defines a set of Kubernetes resources (such as Deployments, Services, ConfigMaps, and more) required to deploy and manage a specific application or service on a Kubernetes cluster.
+It provides a standardized and reusable way to package, distribute, and deploy applications, making it easier to share and reproduce complex deployments across different environments.
+
+In simple terms, you can think of a Helm chart as a "recipe" or "blueprint" for deploying an application on Kubernetes.
+It contains all the necessary configuration settings and templates needed to create the required Kubernetes resources.
+By using Helm charts, you can simplify the process of deploying applications, customize their configurations, and manage their lifecycle (installation, upgrades, and removal) with ease.
+Helm charts are widely used in the Kubernetes ecosystem to simplify application deployment and configuration management.
+(Taking from ChatGPT)
+====================================================================================================================================================================================================================================================
+
+=====================================
+Create and install simple helm chart
+=====================================
+1. Create a folder with all of the files of the helm.
+# helm create <project-name>
+
+2. The above command create a "template" directory, remove the files from this directory to work on blank project (optional).
+# rm -rf <project-name>/templates/*
+
+3. In the templates directory we will create the objects like Deployment, ConfigMap, Service and more...
+For example let's create a ConfigMap:
+
+Create a file in <project-name>/templates/configmap.yaml
+
+----------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mychart-configmap
+data:
+  myvalue: "Hello World"
+----------------------------
+
+4. Install this helm.
+# helm install <release-name>
+This command install the helm with all of the files (In our case is just the configmap) that in the project directory with the release name that you set.
+
+5. Check what we've be installed.
+# helm get manifest <release-name>
+This command will generate a template yaml with all of the resources that we uploaded to the server
+
+6. Set a Simple Template Call
+When we create a objects like ConfigMap, Deployment and more... we don't want to hard-code the "name" for example we want it to be more flexible. and we do it like that:
+
+--------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+--------------------------------------
+
+Now when we install the helm the configmap will be called <release-name>-configmap
+
+=====================
+Edit the Values file
+=====================
+
+=============================================================================================================================================================================================================
+What is the "Values file": In Helm, a values file is a YAML file that allows you to customize the configuration of a Helm chart during deployment.
+It contains a set of key-value pairs, where the keys represent configuration options and the values represent the desired settings for those options.
+
+The values file provides a way to parameterize the Helm chart, making it flexible and adaptable to different deployment scenarios.
+Instead of hardcoding configurations directly into the chart's templates, you can use placeholders in the templates that get replaced with the values specified in the values file when deploying the chart.
+(Taking from ChatGPT)
+=============================================================================================================================================================================================================
+
+1. Set a parameter in the Values.yaml for example:
+
+-----------------------
+favoriteDrink: coffee
+-----------------------
+
+Now we can use this parameter in the ConfigMap template like this:
+
+--------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  drink: {{ .Values.favoriteDrink }}
+--------------------------------------
+
+So now when we run the command "helm install <release-name> ./<project-name> --dry-run --debug" the ConfigMap should be like this:
+
+----------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: <release-name>-configmap
+data:
+  myvalue: "Hello World"
+  drink: coffee
+----------------------------------
+
+
